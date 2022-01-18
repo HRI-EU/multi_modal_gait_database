@@ -19,9 +19,9 @@ V.Losing & M. Hasenjäger, _NEWBEE: A Multi-Modal Gait Database of Natural Every
 
 ## Generate pandas data frame from .csv files
 We provide a script that generates one pandas data frame stored as pickle file from the single recording .csv files. This is quite handy for further processing or analysis.<br/>
-`PYTHONPATH=$(pwd) python src/data_frame_extractor.py -s 1,2 -c a,b -p xxxx//NEWBEE_dataset/data_set/ -d destination_data_frame_path`
+`PYTHONPATH=$(pwd) python src/data_frame_extractor.py -s 1,2 -c a,b -p xxxx/NEWBEE_dataset/data_set/ -d destination_data_frame_path`
 - -s 1,2 for subjects 1 and 2 (default is all subjects) 
-- -c a,b for course A and B (default is all courses)
+- -c a,b for course A and B (default is all courses A,B,C)
 - -p path to the data set
 - -d path to the data frame stored as pickle file
 (more parameters are available see `python src/data_frame_extractor.py --help`)
