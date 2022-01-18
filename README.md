@@ -37,7 +37,3 @@ It can be started by:<br/>
 - -c a for course A
 - -p path to the data set
 
-
-## Example calls and tests
-- To run the test in src/test_extractor.py set the class variable SOURCE_PATH to the data set path
-- To run the example calls set the variables DATA_SET_PATH, DESTINATION_PATH in the shell scripts according to your local directory structure
