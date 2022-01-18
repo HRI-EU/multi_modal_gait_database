@@ -5,6 +5,7 @@ V.Losing & M. Hasenjäger, _NEWBEE: A Multi-Modal Gait Database of Natural Every
 
 
 ## Setup
+- Download the data set
 - Create a new conda environment<br/>
 `conda create -n env_name python==3.9`
 
