@@ -16,11 +16,13 @@ import os
 
 import pandas as pd
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox, QPushButton, QFileDialog, \
-    QTableWidget, QAbstractItemView, QTableWidgetItem, QApplication
+    QTableWidget, QAbstractItemView, QTableWidgetItem, QApplication, QTabWidget
+from PyQt5 import QtCore
+
 import numpy as np
 import common
 from visualization.sole_visualizer import SoleVisualizer
-from visualization.xsens_playback_tool import XsensPlaybackTool
+#from visualization.xsens_playback_tool import XsensPlaybackTool
 from visualization.playback_bar import PlaybackBar
 from visualization.eyetracker_visualizer import EyeTrackerVisualizer
 
@@ -33,6 +35,15 @@ class LabelingTool(QWidget):
     WINDOW_WIDTH = 1000
     WINDOW_HEIGHT = 500
     VISUALIZATION_FRAME_RATE = 10
+
+    LBL_TYPE_MODE = "mode"
+    LBL_TYPE_ORIENTATION = "orientation"
+    LBL_TYPE_INTERACTION = "interaction"
+
+    LBL_COLUMN_MODE = "walk_mode"
+    LBL_COLUMN_ORIENTATION = "walk_orientation"
+    LBL_COLUMN_INTERACTION = "walk_interaction"
+
     LBL_WALK = 'walk'
     LBL_STAIRS_UP = 'stairs_up'
     LBL_STAIRS_DOWN = 'stairs_down'
@@ -40,10 +51,13 @@ class LabelingTool(QWidget):
     LBL_SLOPE_DOWN = 'slope_down'
     LBL_PAVEMENT_UP = 'pavement_up'
     LBL_PAVEMENT_DOWN = 'pavement_down'
+    LBL_STRAIGHT = 'straight'
     LBL_CURVE_LEFT = 'curve_left'
     LBL_CURVE_RIGHT = 'curve_right'
-    LBL_TURN_LEFT = 'turn_left'
-    LBL_TURN_RIGHT = 'turn_right'
+    LBL_TURN_CLOCKWISE = 'turn_around_clockwise'
+    LBL_TURN_COUNTER_CLOCKWISE = 'turn_around_counter_clockwise'
+    LBL_YES = 'yes'
+    LBL_NO = 'no'
 
     def __init__(self, source_path, course, subject_id, labels_path=None):
         super().__init__(parent=None)
@@ -61,7 +75,7 @@ class LabelingTool(QWidget):
         insoles_data_frame['insoles_LeftFoot_on_ground'] = self.labels_data_frame['insoles_LeftFoot_on_ground']
 
         self.sole_visualizer = SoleVisualizer(insoles_data_frame)
-        self.xsens_playback_tool = XsensPlaybackTool(imu_data_frame)
+        #self.xsens_playback_tool = XsensPlaybackTool(imu_data_frame)
         self.eye_tracker_visualizer = EyeTrackerVisualizer(eye_tracker_data_frame, video_path)
 
         self.resize(LabelingTool.WINDOW_WIDTH, LabelingTool.WINDOW_HEIGHT)
@@ -76,6 +90,8 @@ class LabelingTool(QWidget):
         self.label_text.setText('label')
 
         self.combobox_label = QComboBox(self)
+        #self.combobox_label.addItem("UP")
+        #self.combobox_label.addItem("DOWN")
         self.combobox_label.addItem(LabelingTool.LBL_WALK)
         self.combobox_label.addItem(LabelingTool.LBL_STAIRS_UP)
         self.combobox_label.addItem(LabelingTool.LBL_STAIRS_DOWN)
@@ -83,10 +99,6 @@ class LabelingTool(QWidget):
         self.combobox_label.addItem(LabelingTool.LBL_SLOPE_DOWN)
         self.combobox_label.addItem(LabelingTool.LBL_PAVEMENT_UP)
         self.combobox_label.addItem(LabelingTool.LBL_PAVEMENT_DOWN)
-        self.combobox_label.addItem(LabelingTool.LBL_CURVE_LEFT)
-        self.combobox_label.addItem(LabelingTool.LBL_CURVE_RIGHT)
-        self.combobox_label.addItem(LabelingTool.LBL_TURN_LEFT)
-        self.combobox_label.addItem(LabelingTool.LBL_TURN_RIGHT)
 
         self.button_export = QPushButton('Export')
         # self.button_export.setFixedWidth(80)
@@ -100,17 +112,17 @@ class LabelingTool(QWidget):
         self.button_remove.setFixedWidth(80)
         self.button_remove.clicked.connect(self.button_remove_click)
 
-        self.table_labels = QTableWidget()
-        self.table_labels.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table_labels.setWindowTitle('Label')
-        self.table_labels.horizontalHeader().setStretchLastSection(True)
-        self.table_labels.setRowCount(0)
-        self.table_labels.setFixedHeight(150)
-        self.table_labels.setColumnCount(2)
-        self.table_labels.setHorizontalHeaderLabels(('Frame', 'Label'))
-        self.table_labels.setColumnWidth(1, 30)
-        self.table_labels.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.table_labels.doubleClicked.connect(self.table_double_click)
+        self.table_mode = self.new_label_tabel()
+        self.table_orientation = self.new_label_tabel()
+        self.table_interaction = self.new_label_tabel()
+
+        self.tab_sheet_labels = QTabWidget()
+        self.tab_sheet_labels.addTab(self.table_mode, self.LBL_TYPE_MODE)
+        self.tab_sheet_labels.addTab(self.table_orientation, self.LBL_TYPE_ORIENTATION)
+        self.tab_sheet_labels.addTab(self.table_interaction, self.LBL_TYPE_INTERACTION)
+        self.tab_sheet_labels.currentChanged.connect(self.on_tab_sheet_changed)
+
+
 
         num_frames_per_step = np.round(
             np.round(len(self.labels_data_frame.index) / (self.labels_data_frame.iloc[-1]['time'] / 1000.),
@@ -121,75 +133,174 @@ class LabelingTool(QWidget):
         self.init_layout()
         self.init_labels()
 
+    def new_label_tabel(self):
+        table = QTableWidget()
+        table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        table.setWindowTitle('Label')
+        table.horizontalHeader().setStretchLastSection(True)
+        table.setRowCount(0)
+        table.setFixedHeight(150)
+        table.setColumnCount(2)
+        table.setHorizontalHeaderLabels(('Frame', 'Label'))
+        table.setColumnWidth(1, 30)
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        table.doubleClicked.connect(self.table_double_click)
+        return table
+
+    def on_tab_sheet_changed(self):
+        self.label_text.setText('label %s' % (self.get_current_label()))
+        if self.tab_sheet_labels.currentIndex() == 0:
+            self.combobox_label.clear()
+            self.combobox_label.addItem(LabelingTool.LBL_WALK)
+            self.combobox_label.addItem(LabelingTool.LBL_STAIRS_UP)
+            self.combobox_label.addItem(LabelingTool.LBL_STAIRS_DOWN)
+            self.combobox_label.addItem(LabelingTool.LBL_SLOPE_UP)
+            self.combobox_label.addItem(LabelingTool.LBL_SLOPE_DOWN)
+            self.combobox_label.addItem(LabelingTool.LBL_PAVEMENT_UP)
+            self.combobox_label.addItem(LabelingTool.LBL_PAVEMENT_DOWN)
+        elif self.tab_sheet_labels.currentIndex() == 1:
+            self.combobox_label.clear()
+            self.combobox_label.addItem(LabelingTool.LBL_STRAIGHT)
+            self.combobox_label.addItem(LabelingTool.LBL_CURVE_RIGHT)
+            self.combobox_label.addItem(LabelingTool.LBL_CURVE_LEFT)
+            self.combobox_label.addItem(LabelingTool.LBL_TURN_CLOCKWISE)
+            self.combobox_label.addItem(LabelingTool.LBL_TURN_COUNTER_CLOCKWISE)
+        elif self.tab_sheet_labels.currentIndex() == 2:
+            self.combobox_label.clear()
+            self.combobox_label.addItem(LabelingTool.LBL_NO)
+            self.combobox_label.addItem(LabelingTool.LBL_YES)
+
+    def keyPressEvent(self, event):
+        #if event.key() == QtCore.Qt.Key_W:
+        #    self.button_add_click("UP")
+        #elif event.key() == QtCore.Qt.Key_S:
+        #    self.button_add_click("DOWN")
+        if event.key() == QtCore.Qt.Key_D:
+            self.playback_bar.button_forward_click()
+            self.draw_model()
+        elif event.key() == QtCore.Qt.Key_A:
+            self.playback_bar.button_back_click()
+            self.draw_model()
+
+    def get_current_table(self):
+        if self.tab_sheet_labels.currentIndex() == 0:
+            return self.table_mode
+        elif self.tab_sheet_labels.currentIndex() == 1:
+            return self.table_orientation
+        elif self.tab_sheet_labels.currentIndex() == 2:
+            return self.table_interaction
+        else:
+            assert False
+
+    def get_current_default_label(self):
+        if self.tab_sheet_labels.currentIndex() == 0:
+            return self.LBL_WALK
+        elif self.tab_sheet_labels.currentIndex() == 1:
+            return self.LBL_STRAIGHT
+        elif self.tab_sheet_labels.currentIndex() == 2:
+            return self.LBL_NO
+        else:
+            assert False
+
+    def get_table_to_lbl_column(self, lbl_column):
+        if lbl_column == self.LBL_COLUMN_MODE:
+            return self.table_mode
+        elif lbl_column == self.LBL_COLUMN_ORIENTATION:
+            return self.table_orientation
+        elif lbl_column == self.LBL_COLUMN_INTERACTION:
+            return self.table_interaction
+
+    def get_default_label_to_lbl_column(self, lbl_column):
+        if lbl_column == self.LBL_COLUMN_MODE:
+            return self.LBL_WALK
+        elif lbl_column == self.LBL_COLUMN_ORIENTATION:
+            return self.LBL_STRAIGHT
+        elif lbl_column == self.LBL_COLUMN_INTERACTION:
+            return self.LBL_NO
+        else:
+            assert False
+
+    def table_double_click(self, mi):
+        current_table = self.get_current_table()
+        row_idx = mi.row()
+        self.playback_bar.select_value(int(current_table.item(row_idx, 0).text()))
+
+    def button_remove_click(self):
+        current_table = self.get_current_table()
+        indexes = current_table.selectionModel().selectedRows()
+        for index in sorted(indexes):
+            current_table.removeRow(index.row())
+        self.label_text.setText('label %s' % (self.get_current_label()))
+
+    def button_add_click(self, label=None):
+        current_table = self.get_current_table()
+        row_count = current_table.rowCount()  # necessary even when there are no rows in the table
+        current_frame = self.playback_bar.selected_value()
+        target_row_index = 0
+        for i in range(row_count):
+            if current_table.item(i, 0) is None or current_table.item(i, 0).text() != '' and int(
+                    current_table.item(i, 0).text()) < current_frame:
+                target_row_index = i + 1
+        current_table.insertRow(target_row_index)
+        current_table.setItem(target_row_index, 0, QTableWidgetItem(str(current_frame)))
+        current_table.setItem(target_row_index, 1, QTableWidgetItem(label if label else self.combobox_label.currentText()))
+        self.label_text.setText('label %s' % (self.get_current_label()))
+
     def button_export_click(self):
         save_filepath, _ = QFileDialog.getSaveFileName(self, 'Save labeled dataframe', self.subject_path,
                                                        'csv files (*.csv)', options=QFileDialog.DontUseNativeDialog)
         if save_filepath != '':
-            labels = []
-            last_index = 0
-            last_label = LabelingTool.LBL_WALK
-            for i in range(self.table_labels.rowCount()):
-                if self.table_labels.item(i, 0) is None or self.table_labels.item(i, 0).text() == '':
-                    break
-                else:
-                    labels += (int(self.table_labels.item(i, 0).text()) - last_index) * [last_label]
-                    last_index = int(self.table_labels.item(i, 0).text())
-                    last_label = self.table_labels.item(i, 1).text()
-            labels += (self.labels_data_frame.index[-1] + 1 - last_index) * [last_label]
-            self.labels_data_frame['walk_mode'] = labels
-            self.labels_data_frame.to_csv(save_filepath)
+            for column in [self.LBL_COLUMN_MODE, self.LBL_COLUMN_ORIENTATION, self.LBL_COLUMN_INTERACTION]:
+                labels = []
+                last_index = 0
+                last_label = self.get_default_label_to_lbl_column(column)
+                table = self.get_table_to_lbl_column(column)
+                for i in range(table.rowCount()):
+                    if table.item(i, 0) is None or table.item(i, 0).text() == '':
+                        break
+                    else:
+                        labels += (int(table.item(i, 0).text()) - last_index) * [last_label]
+                        last_index = int(table.item(i, 0).text())
+                        last_label = table.item(i, 1).text()
+                labels += (self.labels_data_frame.index[-1] + 1 - last_index) * [last_label]
+                self.labels_data_frame[column] = labels
+            self.labels_data_frame.to_csv(save_filepath, index=False)
             os.chmod(save_filepath, 0o660)
             print('saved labeled data frame %s' % save_filepath)
 
-    def table_double_click(self, mi):
-        row_idx = mi.row()
-        self.playback_bar.select_value(int(self.table_labels.item(row_idx, 0).text()))
-
-    def button_remove_click(self):
-        indexes = self.table_labels.selectionModel().selectedRows()
-        for index in sorted(indexes):
-            self.table_labels.removeRow(index.row())
-
-    def button_add_click(self):
-        row_count = self.table_labels.rowCount()  # necessary even when there are no rows in the table
-        current_frame = self.playback_bar.selected_value()
-        target_row_index = 0
-        for i in range(row_count):
-            if self.table_labels.item(i, 0) is None or self.table_labels.item(i, 0).text() != '' and int(
-                    self.table_labels.item(i, 0).text()) < current_frame:
-                target_row_index = i + 1
-        self.table_labels.insertRow(target_row_index)
-        self.table_labels.setItem(target_row_index, 0, QTableWidgetItem(str(current_frame)))
-        self.table_labels.setItem(target_row_index, 1, QTableWidgetItem(self.combobox_label.currentText()))
-
     def init_labels(self):
-        labels = self.labels_data_frame['walk_mode']
-        last_label = ''
-        for idx, label in enumerate(labels):
-            if label != last_label:
-                row_idx = self.table_labels.rowCount()
-                self.table_labels.insertRow(row_idx)
-                self.table_labels.setItem(row_idx, 0, QTableWidgetItem(str(idx)))
-                self.table_labels.setItem(row_idx, 1, QTableWidgetItem(label))
-                last_label = label
+        for column in [self.LBL_COLUMN_MODE, self.LBL_COLUMN_ORIENTATION, self.LBL_COLUMN_INTERACTION]:
+            table = self.get_table_to_lbl_column(column)
+            if column not in self.labels_data_frame.columns:
+                self.labels_data_frame[column] = self.get_default_label_to_lbl_column(column)
+            labels = self.labels_data_frame[column]
+            last_label = ''
+            for idx, label in enumerate(labels):
+                if label != last_label:
+                    row_idx = table.rowCount()
+                    table.insertRow(row_idx)
+                    table.setItem(row_idx, 0, QTableWidgetItem(str(idx)))
+                    table.setItem(row_idx, 1, QTableWidgetItem(label))
+                    last_label = label
 
     def get_current_label(self):
+        current_table = self.get_current_table()
         frame_idx = self.playback_bar.selected_value()
-        last_label = self.LBL_WALK
+        last_label = self.get_current_default_label()
         last_index = 0
-        for i in range(self.table_labels.rowCount()):
-            if self.table_labels.item(i, 0) is None or self.table_labels.item(i, 0).text() == '':
+        for i in range(current_table.rowCount()):
+            if current_table.item(i, 0) is None or current_table.item(i, 0).text() == '':
                 break
             else:
-                current_index = int(self.table_labels.item(i, 0).text())
+                current_index = int(current_table.item(i, 0).text())
                 if last_index <= frame_idx < current_index:
                     return last_label
-                last_label = self.table_labels.item(i, 1).text()
+                last_label = current_table.item(i, 1).text()
         return last_label
 
     def init_layout(self):
         top_layout = QHBoxLayout()
-        top_layout.addWidget(self.xsens_playback_tool)
+        #top_layout.addWidget(self.xsens_playback_tool)
         top_layout.addWidget(self.sole_visualizer)
         top_layout.addWidget(self.eye_tracker_visualizer)
 
@@ -211,7 +322,7 @@ class LabelingTool(QWidget):
         bottom_layout = QHBoxLayout()
         bottom_layout.addLayout(bottom_left_vbox)
         bottom_layout.addLayout(bottom_right_vbox)
-        bottom_layout.addWidget(self.table_labels)
+        bottom_layout.addWidget(self.tab_sheet_labels)
 
         root_layout = QVBoxLayout()
         root_layout.addLayout(top_layout)
@@ -221,7 +332,7 @@ class LabelingTool(QWidget):
         self.setLayout(root_layout)
 
     def draw_model(self):
-        self.xsens_playback_tool.select_value(self.playback_bar.selected_value())
+        #self.xsens_playback_tool.select_value(self.playback_bar.selected_value())
         self.sole_visualizer.select_value(self.playback_bar.selected_value())
         self.eye_tracker_visualizer.select_value(self.playback_bar.selected_value())
         self.time_text.setText('time %.2fs' % (self.playback_bar.selected_value() / float(self.stream_frame_rate)))

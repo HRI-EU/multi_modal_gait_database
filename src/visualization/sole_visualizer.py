@@ -39,7 +39,7 @@ Right_Heel_R = 'Right_Heel_R'
 Right_Heel_L = 'Right_Heel_L'
 RIGHT_PRESSURE_SENSORS = (
 Right_TOES, Right_HALLUX, Right_MET5, Right_MET3, Right_MET1, Right_ARCH, Right_Heel_R, Right_Heel_L)
-SENSORight_SIDES_MAPPING = {Right_TOES: Left_TOES, Right_HALLUX: Left_HALLUX, Right_MET5: Left_MET5,
+SENSORIGHT_SIDES_MAPPING = {Right_TOES: Left_TOES, Right_HALLUX: Left_HALLUX, Right_MET5: Left_MET5,
                             Right_MET3: Left_MET3, Right_MET1: Left_MET1, Right_ARCH: Left_ARCH,
                             Right_Heel_R: Left_Heel_R, Right_Heel_L: Left_Heel_L}
 
@@ -50,7 +50,7 @@ class SoleVisualizer(QWidget):
     RECT_WIDTH = BACKGROUND_WIDTH * 0.05
     RECT_HEIGHT = BACKGROUND_HEIGHT * 0.1
 
-    SENSORight_DRAW_POSITIONS_LEFT = {
+    SENSORIGHT_DRAW_POSITIONS_LEFT = {
         Left_TOES: (0.1 * BACKGROUND_WIDTH, 0.1 * BACKGROUND_HEIGHT),
         Left_HALLUX: (0.25 * BACKGROUND_WIDTH, 0.05 * BACKGROUND_HEIGHT),
         Left_MET5: (0.03 * BACKGROUND_WIDTH, 0.31 * BACKGROUND_HEIGHT),
@@ -72,7 +72,7 @@ class SoleVisualizer(QWidget):
         self.data_frame = data_frame
 
         for item in RIGHT_PRESSURE_SENSORS:
-            left_item = self.SENSORight_DRAW_POSITIONS_LEFT[SENSORight_SIDES_MAPPING[item]]
+            left_item = self.SENSORIGHT_DRAW_POSITIONS_LEFT[SENSORIGHT_SIDES_MAPPING[item]]
             self.draw_positions_right[item] = (0.95 * self.BACKGROUND_WIDTH - left_item[0], left_item[1])
 
         self.label = QLabel()
@@ -101,6 +101,7 @@ class SoleVisualizer(QWidget):
         time_peRight_step = 1 / SoleVisualizer.VISUALIZATION_FRAME_RATE
         self.playback_bar = PlaybackBar(self.data_frame.index[0], self.data_frame.index[-1], num_frames_peRight_step,
                                         time_peRight_step, self.draw_model)
+        self.last_row = None
         self.draw_model()
         self.init_layout()
 
@@ -134,15 +135,15 @@ class SoleVisualizer(QWidget):
         self.visualize_row(row)
 
     def visualize_row(self, row):
-        sensoRight_draw_positions = {**self.SENSORight_DRAW_POSITIONS_LEFT, **self.draw_positions_right}
-        for key in sensoRight_draw_positions:
+        sensor_draw_positions = {**self.SENSORIGHT_DRAW_POSITIONS_LEFT, **self.draw_positions_right}
+        for key in sensor_draw_positions:
             pressure_value = row[key]
-            color = [item * 255 for item in self.coloRight_mapper.to_rgba(pressure_value)]
-            q_color = QColor(color[0], color[1], color[2], 255)
-            if pressure_value > 0:
+            last_value = self.last_row[key] if self.last_row is not None else None
+            if last_value is None or pressure_value != last_value:
+                color = [item * 255 for item in self.coloRight_mapper.to_rgba(pressure_value)]
+                q_color = QColor(color[0], color[1], color[2], 255)
                 self.painter.setBrush(QBrush(q_color, Qt.SolidPattern))
-
-                self.painter.drawRect(sensoRight_draw_positions[key][0], sensoRight_draw_positions[key][1],
+                self.painter.drawRect(sensor_draw_positions[key][0], sensor_draw_positions[key][1],
                                       self.RECT_WIDTH, self.RECT_HEIGHT)
         self.label.update()
         if row['insoles_RightFoot_on_ground']:
@@ -158,6 +159,7 @@ class SoleVisualizer(QWidget):
         self.frame_text.setText("frame %d / %d " % (self.playback_bar.selected_value(), self.data_frame.index[-1]))
         self.left_foot_force_text.setText("force %.2f" % row['Left_Max_Force'])
         self.right_foot_force_text.setText("force %.2f" % row['Right_Max_Force'])
+        self.last_row = row.copy()
 
     def select_value(self, value):
         self.playback_bar.select_value(value)
