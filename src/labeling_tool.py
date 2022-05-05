@@ -22,7 +22,7 @@ from PyQt5 import QtCore
 import numpy as np
 import common
 from visualization.sole_visualizer import SoleVisualizer
-#from visualization.xsens_playback_tool import XsensPlaybackTool
+from visualization.xsens_playback_tool import XsensPlaybackTool
 from visualization.playback_bar import PlaybackBar
 from visualization.eyetracker_visualizer import EyeTrackerVisualizer
 
@@ -75,7 +75,7 @@ class LabelingTool(QWidget):
         insoles_data_frame['insoles_LeftFoot_on_ground'] = self.labels_data_frame['insoles_LeftFoot_on_ground']
 
         self.sole_visualizer = SoleVisualizer(insoles_data_frame)
-        #self.xsens_playback_tool = XsensPlaybackTool(imu_data_frame)
+        self.xsens_playback_tool = XsensPlaybackTool(imu_data_frame)
         self.eye_tracker_visualizer = EyeTrackerVisualizer(eye_tracker_data_frame, video_path)
 
         self.resize(LabelingTool.WINDOW_WIDTH, LabelingTool.WINDOW_HEIGHT)
@@ -300,7 +300,7 @@ class LabelingTool(QWidget):
 
     def init_layout(self):
         top_layout = QHBoxLayout()
-        #top_layout.addWidget(self.xsens_playback_tool)
+        top_layout.addWidget(self.xsens_playback_tool)
         top_layout.addWidget(self.sole_visualizer)
         top_layout.addWidget(self.eye_tracker_visualizer)
 
@@ -332,7 +332,7 @@ class LabelingTool(QWidget):
         self.setLayout(root_layout)
 
     def draw_model(self):
-        #self.xsens_playback_tool.select_value(self.playback_bar.selected_value())
+        self.xsens_playback_tool.select_value(self.playback_bar.selected_value())
         self.sole_visualizer.select_value(self.playback_bar.selected_value())
         self.eye_tracker_visualizer.select_value(self.playback_bar.selected_value())
         self.time_text.setText('time %.2fs' % (self.playback_bar.selected_value() / float(self.stream_frame_rate)))
