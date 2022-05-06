@@ -6,18 +6,16 @@ V.Losing & M. Hasenjäger, _NEWBEE: A Multi-Modal Gait Database of Natural Every
 
 ## Setup
 - Download the data set
-- Create a new conda environment<br/>
-`conda create -n env_name python==3.9`
+- Create a new virtual environment (we name it `my_venv`) and activate it
+```shell
+python3 -m venv ./my_venv
+source ./my_venv/bin/activate
+```
 
-- Activate the environment<br/>
-`conda activate env_name`
-
-- Install required packages<br/>
-`pip install -r requirements.txt`
-
-#### Required for the labeling tool
-- Install pyqt package using conda (using pip instead may lead to runtime errors)<br/>
-`conda install -c anaconda pyqt `
+- Install requirements
+```shell
+pip install -r requirements.txt
+```
 
 ## Generate pandas data frame from .csv files
 We provide a script that generates one pandas data frame stored as pickle file from the single recording .csv files. This is quite handy for further processing or analysis.<br/>
