@@ -1,8 +1,13 @@
-# NEWBEE data set
+# Multi Modal Gait Database
 
 This is the repository to the article<br/>
-V.Losing & M. Hasenjäger, _NEWBEE: A Multi-Modal Gait Database of Natural Everyday-Walk in an Urban Environment_, 2022. We provide some scripts to generate custom pandas data frames from the raw data to streamline the processing and machine learning. Additionally, there is also a visualization / labeling tool enabling data inspection and the modification of the labels.
+V.Losing & M. Hasenjäger, _A Multi-Modal Gait Database of Natural Everyday-Walk in an Urban Environment_, 2022. We provide some scripts to generate custom pandas data frames from the raw data to streamline the processing and machine learning. Additionally, there is also a visualization / labeling tool enabling data inspection and the modification of the labels.
 
+## Example videos
+These videos provide an impression of the available data that is based on recordings using the XSens motion suit, insoles pressure sensors as well as an eye tracker.
+- [course A](https://github.com/HRI-EU/multi_modal_gait_database/blob/master/videos/courseA_2.mp4)
+- [course B](https://github.com/HRI-EU/multi_modal_gait_database/blob/master/videos/courseB_2.mp4)
+- [course C](https://github.com/HRI-EU/multi_modal_gait_database/blob/master/videos/courseC_2.mp4)
 
 ## Setup
 - Download the data set
@@ -35,4 +40,5 @@ It can be started by:<br/>
 - -s 1 for subject 1
 - -c a for course A
 - -p path to the data set
+
 
