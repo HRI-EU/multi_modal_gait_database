@@ -9,11 +9,13 @@ import sys
 from sklearn.metrics import mean_absolute_error
 import seaborn
 
+from .common import INSOLES_FILE_NAME, LABELS_FILE_NAME
+
 seaborn.set()
 matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
 plt.rc('text', usetex=True)
 
-from .common import INSOLES_FILE_NAME, LABELS_FILE_NAME
+
 TARGET_FRAME_RATE = 60
 
 STEP_FORCE_THRESHOLD = 0.2
@@ -429,9 +431,10 @@ def optimize_thresholds():
         os.path.join(prefix, "courseC/id13/"),
         os.path.join(prefix, "courseC/id25/"),
         ]
-
     optimize_thresholds_for_paths(labeled_paths)
 
+
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-reprocess_all_soles_data()
+#reprocess_all_soles_data()
 #optimize_thresholds()
+

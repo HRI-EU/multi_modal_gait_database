@@ -21,22 +21,23 @@ import matplotlib.cm as cm
 import matplotlib.colors as colors
 from .playback_bar import PlaybackBar
 
-Left_HALLUX = 'Left_Hallux'
-Left_TOES = 'Left_Toes'
-Left_MET1 = 'Left_Met1'
-Left_MET3 = 'Left_Met3'
-Left_MET5 = 'Left_Met5'
-Left_ARCH = 'Left_Arch'
-Left_Heel_R = 'Left_Heel_R'
-Left_Heel_L = 'Left_Heel_L'
-Right_HALLUX = 'Right_Hallux'
-Right_TOES = 'Right_Toes'
-Right_MET1 = 'Right_Met1'
-Right_MET3 = 'Right_Met3'
-Right_MET5 = 'Right_Met5'
-Right_ARCH = 'Right_Arch'
-Right_Heel_R = 'Right_Heel_R'
-Right_Heel_L = 'Right_Heel_L'
+Left_HALLUX = 'Left_Hallux_norm'
+Left_TOES = 'Left_Toes_norm'
+Left_MET1 = 'Left_Met1_norm'
+Left_MET3 = 'Left_Met3_norm'
+Left_MET5 = 'Left_Met5_norm'
+Left_ARCH = 'Left_Arch_norm'
+Left_Heel_R = 'Left_Heel_R_norm'
+Left_Heel_L = 'Left_Heel_L_norm'
+Right_HALLUX = 'Right_Hallux_norm'
+Right_TOES = 'Right_Toes_norm'
+Right_MET1 = 'Right_Met1_norm'
+Right_MET3 = 'Right_Met3_norm'
+Right_MET5 = 'Right_Met5_norm'
+Right_ARCH = 'Right_Arch_norm'
+Right_Heel_R = 'Right_Heel_R_norm'
+Right_Heel_L = 'Right_Heel_L_norm'
+
 RIGHT_PRESSURE_SENSORS = (
 Right_TOES, Right_HALLUX, Right_MET5, Right_MET3, Right_MET1, Right_ARCH, Right_Heel_R, Right_Heel_L)
 SENSORIGHT_SIDES_MAPPING = {Right_TOES: Left_TOES, Right_HALLUX: Left_HALLUX, Right_MET5: Left_MET5,
@@ -157,8 +158,8 @@ class SoleVisualizer(QWidget):
 
         self.time_text.setText("time %.2fs" % (row['time'] / 1000.))
         self.frame_text.setText("frame %d / %d " % (self.playback_bar.selected_value(), self.data_frame.index[-1]))
-        self.left_foot_force_text.setText("force %.2f" % row['Left_Max_Force'])
-        self.right_foot_force_text.setText("force %.2f" % row['Right_Max_Force'])
+        self.left_foot_force_text.setText("pressure %.2f" % row['Left_Max_Pressure_norm'])
+        self.right_foot_force_text.setText("pressure %.2f" % row['Right_Max_Pressure_norm'])
         self.last_row = row.copy()
 
     def select_value(self, value):

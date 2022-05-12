@@ -264,8 +264,12 @@ class LabelingTool(QWidget):
                         last_label = table.item(i, 1).text()
                 labels += (self.labels_data_frame.index[-1] + 1 - last_index) * [last_label]
                 self.labels_data_frame[column] = labels
+            overwrite = False
+            if os.path.exists(save_filepath):
+                overwrite = True
             self.labels_data_frame.to_csv(save_filepath, index=False)
-            os.chmod(save_filepath, 0o660)
+            if not overwrite:
+                os.chmod(save_filepath, 0o660)
             print('saved labeled data frame %s' % save_filepath)
 
     def init_labels(self):

@@ -11,7 +11,6 @@ __maintainer__ = 'Viktor Losing'
 __email__ = 'viktor.losing@honda-ri.de'
 import os
 
-
 COURSE_A = "a"
 COURSE_B = "b"
 COURSE_C = "c"
